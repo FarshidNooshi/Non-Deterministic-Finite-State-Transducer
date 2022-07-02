@@ -66,10 +66,13 @@ public class FiniteStateTransducer {
             for (MiddleState middleState : currentStates) {
                 for (Transition transition : middleState.state.getTransitions()) {
                     if (transition.input() == c) {
-                        nextStates.add(new MiddleState(this.getStateByName(transition.outStateName()),
-                                middleState.output + c));
-                    } else if (transition.input() == '\0') {
-                        nextStates.add(handleEpsilonTransition(middleState, transition, c));
+                        if (transition.output() != '\0') {
+                            nextStates.add(new MiddleState(this.getStateByName(transition.outStateName()),
+                                    middleState.output + transition.output()));
+                        } else {
+                            nextStates.add(new MiddleState(this.getStateByName(transition.outStateName()),
+                                    middleState.output));
+                        }
                     }
                 }
             }
@@ -81,13 +84,6 @@ public class FiniteStateTransducer {
             }
         }
         return new ReturnType(result);
-    }
-
-    private MiddleState handleEpsilonTransition(MiddleState middleState, Transition transition, char c) {
-        var nextStates = new ArrayList<MiddleState>();
-        var visitedStates = new HashSet<String>();
-        nextStates.add(middleState);
-
     }
 
     private record MiddleState(State state, String output) {
