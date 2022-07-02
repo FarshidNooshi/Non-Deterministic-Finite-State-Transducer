@@ -4,7 +4,9 @@ import com.model.State;
 import com.model.Transition;
 import com.util.ReturnType;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -61,9 +63,10 @@ public class FiniteStateTransducer {
     /**
      * This method adds transitions from given in,out states to the FST
      * which their input and output characters are the same
-     * @param inStateName   name of the state where the transition starts
-     * @param input         the characters of the transitions where the input and output are the same for all transitions
-     * @param outStateName  name of the state where the transition ends
+     *
+     * @param inStateName  name of the state where the transition starts
+     * @param input        the characters of the transitions where the input and output are the same for all transitions
+     * @param outStateName name of the state where the transition ends
      */
     public void addSetTransition(String inStateName, String input, String outStateName) {
         for (State state : this.states) {
@@ -78,39 +81,52 @@ public class FiniteStateTransducer {
     /**
      * This method parses the input string and returns the output string of the FST by following the transitions
      * if the input string is not accepted by the FST, it returns "FAIL" as output.
+     *
      * @param input the input string we want to parse
      * @return the output string/strings of the FST
      */
     public ReturnType parseInput(String input) {
+        var visited = new HashSet<AbstractMap.SimpleEntry<String, State>>();
         var result = new HashSet<String>();
-        var currentStates = new ArrayList<MiddleState>();
-        currentStates.add(new MiddleState(this.getStateByName("q0"), ""));
-
-        for (char c : input.toCharArray()) {
-            var nextStates = new ArrayList<MiddleState>();
-            for (MiddleState middleState : currentStates) {
-                for (Transition transition : middleState.state.getTransitions()) {
-                    if (transition.input() == c) {
-                        if (transition.output() != '\0') {
-                            nextStates.add(new MiddleState(this.getStateByName(transition.outStateName()),
-                                    middleState.output + transition.output()));
-                        } else {
-                            nextStates.add(new MiddleState(this.getStateByName(transition.outStateName()),
-                                    middleState.output));
-                        }
-                    }
+        var states = new ArrayList<MiddleState>();
+        states.add(new MiddleState(this.getStateByName("q1"), "", input));
+        while (!states.isEmpty()) {
+            var currentState = states.remove(0);
+            if (currentState.inputTilNow.isEmpty()) {
+                if (currentState.state.isFinal()) {
+                    result.add(currentState.outputTilNow);
                 }
             }
-            currentStates = nextStates;
-        }
-        for (MiddleState middleState : currentStates) {
-            if (middleState.state.isFinal()) {
-                result.add(middleState.output);
+            if (visited.contains(new AbstractMap.SimpleEntry<>(currentState.inputTilNow, currentState.state()))) {
+                continue;
+            }
+            visited.add(new AbstractMap.SimpleEntry<>(currentState.inputTilNow, currentState.state()));
+            for (Transition transition : currentState.state.getTransitions()) {
+                if ((!currentState.inputTilNow.isEmpty() && transition.input() == currentState.inputTilNow.charAt(0))
+                        || transition.input() == '\0') {
+                    var nextOutput = currentState.outputTilNow;
+                    if (transition.output() != '\0') {
+                        nextOutput += transition.output();
+                    }
+                    var newState = new MiddleState(this.getStateByName(transition.outStateName()),
+                            nextOutput, getNextInput(currentState.inputTilNow));
+//                    if (!visited.contains(new AbstractMap.SimpleEntry<>(newState.inputTilNow, newState.state))) {
+                        states.add(newState);
+//                        visited.add(new AbstractMap.SimpleEntry<>(newState.inputTilNow, newState.state));
+//                    }
+                }
             }
         }
         return new ReturnType(result);
     }
 
-    private record MiddleState(State state, String output) {
+    private String getNextInput(String inputTilNow) {
+        if (inputTilNow.length() == 0) {
+            return "";
+        }
+        return inputTilNow.substring(1);
+    }
+
+    private record MiddleState(State state, String outputTilNow, String inputTilNow) {
     }
 }
