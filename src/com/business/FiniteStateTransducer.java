@@ -17,6 +17,12 @@ public class FiniteStateTransducer {
         this.states = new ArrayList<State>();
     }
 
+    /**
+     * This method gets the states of the FST by looking for it's name in the states arraylist
+     *
+     * @param name the name of the state we are looking for
+     * @return the state if found, null otherwise
+     */
     public State getStateByName(String name) {
         for (State state : states) {
             if (state.getName().equals(name)) {
@@ -26,10 +32,24 @@ public class FiniteStateTransducer {
         return null;
     }
 
+    /**
+     * This method adds a state to the FST
+     *
+     * @param name    the name of the state we are adding
+     * @param isFinal true if the state is a final state, false otherwise
+     */
     public void addState(String name, boolean isFinal) {
         this.states.add(new State(name, isFinal));
     }
 
+    /**
+     * This method adds a Transition to the FST
+     *
+     * @param inStateName  name of the state where the transition starts
+     * @param input        the input character of the transition
+     * @param output       the output character of the transition
+     * @param outStateName name of the state where the transition ends
+     */
     public void addTransition(String inStateName, char input, char output, String outStateName) {
         for (State state : this.states) {
             if (state.getName().equals(inStateName)) {
@@ -38,6 +58,13 @@ public class FiniteStateTransducer {
         }
     }
 
+    /**
+     * This method adds transitions from given in,out states to the FST
+     * which their input and output characters are the same
+     * @param inStateName   name of the state where the transition starts
+     * @param input         the characters of the transitions where the input and output are the same for all transitions
+     * @param outStateName  name of the state where the transition ends
+     */
     public void addSetTransition(String inStateName, String input, String outStateName) {
         for (State state : this.states) {
             if (state.getName().equals(inStateName)) {
@@ -48,14 +75,12 @@ public class FiniteStateTransducer {
         }
     }
 
-    public void addEpsilonTransition(String inStateName, String outStateName) {
-        for (State state : this.states) {
-            if (state.getName().equals(inStateName)) {
-                state.getTransitions().add(new Transition(inStateName, outStateName, '\0', '\0'));
-            }
-        }
-    }
-
+    /**
+     * This method parses the input string and returns the output string of the FST by following the transitions
+     * if the input string is not accepted by the FST, it returns "FAIL" as output.
+     * @param input the input string we want to parse
+     * @return the output string/strings of the FST
+     */
     public ReturnType parseInput(String input) {
         var result = new HashSet<String>();
         var currentStates = new ArrayList<MiddleState>();
