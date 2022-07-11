@@ -3,3 +3,5 @@
 </div>
 
 # non-deterministic-finite-state-transducer
+
+This sample project will transfer English nouns into plurals.
